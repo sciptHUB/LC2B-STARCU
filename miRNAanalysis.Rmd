@@ -1,0 +1,597 @@
+---
+title: "miR-601 and miR-630 targets analysis"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+require(tidyverse)
+require(org.Hs.eg.db)
+require(clusterProfiler)
+```
+
+Download gene target tables for miR-601.
+```{r}
+setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+
+T601 <- as.data.frame(read.delim('miR-601_targets.txt'))
+
+# change name of column 11 and 12
+colnames(T601)[c(11,12)] <- c('CWCS','TCS')
+
+```
+
+```{r}
+# remove CWCS = 0
+T601$CWCS <- as.numeric(as.character(T601$CWCS))
+
+T601 <- T601 %>% subset(CWCS < 0)
+
+```
+
+
+```{r}
+# convert gene symboles to entrez ids
+gene.T601 <- as.character(T601$Target.gene)
+gene.T601.df <- clusterProfiler::bitr(gene.T601,
+                                 fromType = 'SYMBOL',
+                                 toType = c('ENTREZID'),
+                                 OrgDb = org.Hs.eg.db)
+
+```
+
+```{r}
+go.BP.T601 <- enrichGO(gene          = gene.T601.df$ENTREZID, # always use ENTREZID as gene inputs
+                       # universe      = names(geneList),
+                       OrgDb         = org.Hs.eg.db,
+                       ont           = "BP", # BP, MF, CC
+                       pAdjustMethod = "BH",
+                       pvalueCutoff  = 0.01,
+                       qvalueCutoff  = 0.05,
+                       readable      = TRUE)
+```
+
+```{r}
+go.MF.T601 <- enrichGO(gene          = gene.T601.df$ENTREZID, # always use ENTREZID as gene inputs
+                       # universe      = names(geneList),
+                       OrgDb         = org.Hs.eg.db,
+                       ont           = "MF", # BP, MF, CC
+                       pAdjustMethod = "BH",
+                       pvalueCutoff  = 0.01,
+                       qvalueCutoff  = 0.05,
+                       readable      = TRUE)
+```
+
+```{r}
+go.CC.T601 <- enrichGO(gene          = gene.T601.df$ENTREZID, # always use ENTREZID as gene inputs
+                       # universe      = names(geneList),
+                       OrgDb         = org.Hs.eg.db,
+                       ont           = "CC", # BP, MF, CC
+                       pAdjustMethod = "BH",
+                       pvalueCutoff  = 0.01,
+                       qvalueCutoff  = 0.05,
+                       readable      = TRUE)
+```
+
+```{r}
+# add annotation
+go.BP.T601@result$Class <- 'BP'
+go.CC.T601@result$Class <- 'CC'
+go.MF.T601@result$Class <- 'MF'
+
+# combine table
+go.T601 <- rbind(go.BP.T601@result,go.CC.T601@result,go.MF.T601@result)
+# filter p.adjust < 0.05
+go.T601.pval <- go.T601 %>% 
+  subset(p.adjust < 0.05) %>%
+  arrange(., p.adjust) %>%
+  slice_head(., n = 10)
+
+go.T601.pval$p.adjust <- -log10(go.T601.pval$p.adjust)
+
+go.T601.pval$Term <- paste0('[',go.T601.pval$Class,']',go.T601.pval$Description)
+
+go.T601.pval$Term <- factor(go.T601.pval$Term, levels = rev(go.T601.pval$Term))
+
+
+```
+
+```{r}
+
+GOTerm.miR601 <- ggplot(go.T601.pval,
+       aes(x = p.adjust,
+           y = Term)) +
+  geom_col() +
+  theme_bw() +
+  labs(x = expression(-log[10]~p-value),
+       y = 'GO Terms',
+       title = 'miR-601 targetted genes')
+
+GOTerm.miR601
+
+```
+
+Download gene target tables for miR-630.
+```{r}
+setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+
+T630 <- as.data.frame(read.delim('miR-630_targets.txt'))
+
+# change name of column 11 and 12
+colnames(T630)[c(11,12)] <- c('CWCS','TCS')
+
+```
+
+```{r}
+# remove CWCS = 0
+T630$CWCS <- as.numeric(as.character(T630$CWCS))
+
+T630 <- T630 %>% subset(CWCS < 0)
+
+```
+
+```{r}
+gene.T630 <- as.character(T630$Target.gene)
+gene.T630.df <- clusterProfiler::bitr(gene.T630,
+                                 fromType = 'SYMBOL',
+                                 toType = c('ENTREZID'),
+                                 OrgDb = org.Hs.eg.db)
+```
+
+```{r}
+go.BP.T630 <- enrichGO(gene          = gene.T630.df$ENTREZID, # always use ENTREZID as gene inputs
+                       # universe      = names(geneList),
+                       OrgDb         = org.Hs.eg.db,
+                       ont           = "BP", # BP, MF, CC
+                       pAdjustMethod = "BH",
+                       pvalueCutoff  = 0.01,
+                       qvalueCutoff  = 0.05,
+                       readable      = TRUE)
+```
+
+```{r}
+go.MF.T630 <- enrichGO(gene          = gene.T630.df$ENTREZID, # always use ENTREZID as gene inputs
+                       # universe      = names(geneList),
+                       OrgDb         = org.Hs.eg.db,
+                       ont           = "MF", # BP, MF, CC
+                       pAdjustMethod = "BH",
+                       pvalueCutoff  = 0.01,
+                       qvalueCutoff  = 0.05,
+                       readable      = TRUE)
+```
+
+```{r}
+go.CC.T630 <- enrichGO(gene          = gene.T630.df$ENTREZID, # always use ENTREZID as gene inputs
+                       # universe      = names(geneList),
+                       OrgDb         = org.Hs.eg.db,
+                       ont           = "CC", # BP, MF, CC
+                       pAdjustMethod = "BH",
+                       pvalueCutoff  = 0.01,
+                       qvalueCutoff  = 0.05,
+                       readable      = TRUE)
+```
+
+```{r}
+# add annotation
+go.BP.T630@result$Class <- 'BP'
+go.CC.T630@result$Class <- 'CC'
+go.MF.T630@result$Class <- 'MF'
+
+# combine table
+go.T630 <- rbind(go.BP.T630@result,go.CC.T630@result,go.MF.T630@result)
+# filter p.adjust < 0.05
+go.T630.pval <- go.T630 %>% 
+  subset(p.adjust < 0.05) %>%
+  arrange(., p.adjust) %>%
+  slice_head(., n = 10)
+
+go.T630.pval$p.adjust <- -log10(go.T630.pval$p.adjust)
+
+go.T630.pval$Term <- paste0('[',go.T630.pval$Class,']',go.T630.pval$Description)
+
+go.T630.pval$Term <- factor(go.T630.pval$Term, levels = rev(go.T630.pval$Term))
+
+
+```
+
+```{r}
+GOTerm.miR630 <- ggplot(go.T630.pval,
+       aes(x = p.adjust,
+           y = Term)) +
+  geom_col() +
+  theme_bw() +
+  labs(x = expression(-log[10]~p-value),
+       y = 'GO Terms',
+       title = 'miR-630 targetted genes')
+
+GOTerm.miR630
+
+```
+
+```{r}
+require(ggpubr)
+
+Figure7.GO <- ggarrange(GOTerm.miR601,GOTerm.miR630,
+          labels = c('A','B'),
+          nrow = 2,
+          ncol = 1, align = 'v')
+
+Figure7.GO
+```
+
+Save GO term outputs.
+```{r}
+# setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+# 
+# write.csv(go.T601,'T601_GOTerm_table.csv',row.names = FALSE)
+# 
+# write.csv(go.T630,'T603_GOTerm_table.csv',row.names = FALSE)
+```
+
+
+Perform KEGG pathways analysis.
+```{r}
+kg.T601 <- enrichKEGG(gene         = gene.T601.df$ENTREZID,
+                      organism     = 'hsa',
+                      pvalueCutoff = 0.01)
+
+# combine table
+kg.T601 <- kg.T601@result
+# filter p.adjust < 0.05
+kg.T601.pval <- kg.T601 %>% 
+  # subset(p.adjust < 0.05) %>%
+  arrange(., p.adjust) %>%
+  slice_head(., n = 10)
+
+kg.T601.pval$p.adjust <- -log10(kg.T601.pval$p.adjust)
+
+kg.T601.pval$Description <- factor(kg.T601.pval$Description, levels = rev(kg.T601.pval$Description))
+
+
+KEGG.miR601 <- ggplot(kg.T601.pval,
+       aes(x = p.adjust,
+           y = Description)) +
+  geom_col() +
+  theme_bw() +
+  labs(x = expression(-log[10]~p-value),
+       y = 'KEGG Pathways',
+       title = 'miR-601 targetted genes')
+```
+
+```{r}
+kg.T630 <- enrichKEGG(gene         = gene.T630.df$ENTREZID,
+                      organism     = 'hsa',
+                      pvalueCutoff = 0.01)
+
+# combine table
+kg.T630 <- kg.T630@result
+# filter p.adjust < 0.05
+kg.T630.pval <- kg.T630 %>% 
+  # subset(p.adjust < 0.05) %>%
+  arrange(., p.adjust) %>%
+  slice_head(., n = 10)
+
+kg.T630.pval$p.adjust <- -log10(kg.T630.pval$p.adjust)
+
+kg.T630.pval$Description <- factor(kg.T630.pval$Description, levels = rev(kg.T630.pval$Description))
+
+
+KEGG.miR630 <- ggplot(kg.T630.pval,
+       aes(x = p.adjust,
+           y = Description)) +
+  geom_col() +
+  theme_bw() +
+  labs(x = expression(-log[10]~p-value),
+       y = 'KEGG Pathways',
+       title = 'miR-630 targetted genes')
+```
+
+```{r}
+Figure7.KEGG <- ggarrange(KEGG.miR601,KEGG.miR630,
+          labels = c('A','B'),
+          nrow = 2,
+          ncol = 1, align = 'v')
+
+Figure7.KEGG
+```
+
+```{r}
+# setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+# ggsave(Figure7.GO,
+#        filename = 'Figure7_GOTerms.pdf',
+#        height = 15,
+#        width = 24,
+#        units = 'cm',
+#        device = cairo_pdf)
+# dev.off()
+```
+
+Create a table of genes overlapping between 2 miRNA target data sets for PPI input data.
+```{r}
+# common targets between miR-601 and miR-630 targets
+A <- intersect(unique(gene.T601.df$ENTREZID),unique(gene.T630.df$ENTREZID))
+B <- intersect(unique(gene.T630.df$ENTREZID),unique(gene.T601.df$ENTREZID))
+C <- A[B %in% A]
+
+gene.df <- clusterProfiler::bitr(C,
+                                 fromType = 'ENTREZID',
+                                 toType = c('SYMBOL'),
+                                 OrgDb = org.Hs.eg.db)
+
+```
+
+We will create an adjacent matrix.
+Download table data obtained from STRINGdb
+```{r}
+library(readr)
+setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+my.string <- read_tsv('string_interactions.tsv')
+# my.biomarkers <- read.csv('GeneList_04112018.csv', header = TRUE, stringsAsFactors = FALSE)
+# df.explevel <- read.csv('Expression_level_ALL_13102018.csv', header = TRUE, stringsAsFactors = FALSE)
+```
+
+Get connected nodes
+```{r}
+library(tidyverse)
+## create edges dataframe
+my.edges <- my.string %>% 
+  dplyr::select(node1,node2,combined_score) %>%
+  subset(combined_score >= 0.9) # nodes with combined score >= 0.9 are used to constructed the network
+
+a <- unique(c(my.edges$node1,my.edges$node2))
+
+## create vertices dataframe
+my.vertices <- gene.df %>% dplyr::select(SYMBOL) %>% subset(SYMBOL %in% a)
+
+# part of codes is from 
+# https://stackoverflow.com/questions/45003500/create-an-adjacency-matrix-or-list-based-on-shared-properties-from-a-data-frame
+library(igraph)
+# Create graph
+g <- graph_from_data_frame(d = my.edges, 
+                           vertices = my.vertices,
+                           directed = TRUE)
+# Create adjacency matrix from graph
+M <- as_adjacency_matrix(g, attr = 'combined_score')
+
+# coerces the data set as a matrix
+m <- as.matrix(M) 
+# this will create an 'igraph object'
+gg <- graph.adjacency(m,
+                      mode = 'undirected', 
+                      weighted = 'combined_score' # use 'combined_socre' as weight
+                      )
+
+# change layout algorithm
+# my.layout <- layout.reingold.tilford(gg, circular = TRUE)
+my.layout <- layout.kamada.kawai(gg)
+
+# convert igraph object to coordinates for building a network using ggplot2
+library(intergraph)
+g2 <- asNetwork(gg)
+library(ggnetwork)
+g3 <- ggnetwork(g2,
+                layout = my.layout,
+                cell.jitter = 0.75)
+
+g3.1 <- g3[!duplicated(g3$vertex.names),]
+
+```
+
+Plot PPI network.
+```{r}
+library(ggplot2)
+ppi <- ggplot(g3,
+              aes(x = x, 
+                  y = y, 
+                  xend = xend, 
+                  yend = yend)) +
+  geom_edges(aes(linetype = 'solid'),
+             #arrow = arrow(length = unit(6, "pt"), type = "closed") #if directed
+             color = 'grey50',
+             #curvature = 0.2,
+             alpha = 0.5) +
+  geom_nodes(fill = 'gray', 
+             shape = 21,stroke = 0.1,
+             size = 3) + 
+  geom_text(data = g3.1,
+                  aes(x = x,
+                      y = y,
+                      label = vertex.names), 
+                  size = 0.75,
+                  segment.color = NA) +
+  # scale_colour_manual(values = cols, name = 'Expresion level \n(z-score)') +
+  # facet_grid(cellsub ~ cell, scales = 'fixed') + #, scales = 'free', space = 'free') +
+  coord_fixed(ratio = 1) +
+  # theme_facet() +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        
+        panel.background = element_rect(fill = 'white'),
+        panel.grid = element_blank(),
+        legend.position = 'none'
+  )
+
+ppi
+```
+
+
+```{r}
+# setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+# ggsave(ppi,
+#        filename = 'Figure8_PPI.pdf',
+#        height = 15,
+#        width = 15,
+#        units = 'cm',
+#        device = cairo_pdf)
+# dev.off()
+```
+
+Prepare input data.
+```{r}
+library(igraph)
+library(plyr)
+#transform df into igraph
+vs <- graph.data.frame(my.edges, 
+                      directed = FALSE, 
+                      vertices = NULL)    
+
+edgeCount <- lapply(1:length(my.edges$node1), function(i) {
+
+  vert <- my.edges$node1[i]
+  inc <- length(incident(vs, vert, mode = "total"))
+  
+  datout <- data.frame('Gene' = vert,
+             'Edge.No' = inc)
+  return(datout)
+
+})
+
+edgeCount <- do.call(rbind,edgeCount)
+
+edgeCount <- edgeCount[!duplicated(edgeCount$Gene),]
+
+edgeQ75 <- edgeCount %>% subset(Edge.No > 6)
+
+T601.Q75 <- T601 %>% subset(Target.gene %in% edgeQ75$Gene)
+
+T630.Q75 <- T630 %>% subset(Target.gene %in% edgeQ75$Gene)
+
+```
+
+```{r}
+setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+miRNA.PI <- read_tsv('miRNA_protein_interactions.tsv')
+```
+
+Plot miRNA-Protein interaction network.
+```{r}
+library(tidyverse)
+## create edges dataframe
+miR.edges <- miRNA.PI %>% 
+  dplyr::select(node1,node2,combined_score)
+
+# add miRNA to the edge table
+miR.T601.F <- data.frame('node1' = 'hsa-miR-601',
+                       'node2' = unique(miR.edges$node1),
+                       'combined_score' = 0.9)
+
+miR.T601.R <- data.frame('node1' = miR.T601.F$node2,
+                    'node2' = miR.F$node1,
+                    'combined_score' = 0.9)
+
+miR.T630.F <- data.frame('node1' = 'hsa-miR-630',
+                       'node2' = unique(miR.edges$node1),
+                       'combined_score' = 0.9)
+
+miR.T630.R <- data.frame('node1' = miR.T630.F$node2,
+                    'node2' = miR.F$node1,
+                    'combined_score' = 0.9)
+
+miR.edges.cb <- rbind(miR.edges,miR.T601.F,miR.T601.R,miR.T630.F,miR.T630.R)
+
+miR.vertices <- miR.edges.cb %>% dplyr::select(node1) %>% unique()
+
+# part of codes is from 
+# https://stackoverflow.com/questions/45003500/create-an-adjacency-matrix-or-list-based-on-shared-properties-from-a-data-frame
+library(igraph)
+# Create graph
+g.miR <- graph_from_data_frame(d = miR.edges.cb, 
+                           vertices = miR.vertices,
+                           directed = TRUE)
+# Create adjacency matrix from graph
+M.miR <- as_adjacency_matrix(g.miR, attr = 'combined_score')
+
+# coerces the data set as a matrix
+m.miR <- as.matrix(M.miR) 
+# this will create an 'igraph object'
+gg.miR <- graph.adjacency(m.miR,
+                      mode = 'undirected', 
+                      weighted = 'combined_score' # use 'combined_socre' as weight
+                      )
+
+# change layout algorithm
+# miR.layout <- layout.reingold.tilford(gg.miR, circular = TRUE)
+# miR.layout <- layout.kamada.kawai(gg.miR)
+miR.layout <- layout.circle(gg.miR, order = order(degree(gg.miR)))
+
+# convert igraph object to coordinates for building a network using ggplot2
+library(intergraph)
+g2.miR <- asNetwork(gg.miR)
+library(ggnetwork)
+g3.miR <- ggnetwork(g2.miR,
+                layout = miR.layout,
+                cell.jitter = 0.75)
+
+g3.1.miR <- g3.miR[!duplicated(g3.miR$vertex.names),]
+
+# add node size according to degree of interaction
+edge.degree <- degree(gg.miR)
+g3.miR$degree <- edge.degree[match(g3.miR$vertex.names,names(edge.degree))]
+
+# add node color
+g3.miR$color <- ifelse(g3.miR$vertex.names %in% c('hsa-miR-601','hsa-miR-630'), 'orange','gray')
+
+# order of node by edge number
+# edgeQ75 <- edgeQ75 %>% arrange(desc(Edge.No))
+
+# edge.order <- c('hsa-miR-601','hsa-miR-630',as.character(edgeQ75$Gene))
+
+# add factor level 
+
+```
+
+Plot miRNA-Protein interaction network.
+```{r}
+library(ggplot2)
+miR.ppi <- ggplot(g3.miR,
+              aes(x = x, 
+                  y = y, 
+                  xend = xend, 
+                  yend = yend)) +
+  geom_edges(aes(linetype = 'solid'),
+             #arrow = arrow(length = unit(6, "pt"), type = "closed") #if directed
+             color = 'grey50',
+             #curvature = 0.2,
+             alpha = 0.5) +
+  # geom_nodes(fill = 'gray', 
+  #            shape = 21,stroke = 0.1,
+  #            size = 3) + 
+  geom_node_point(aes(size = degree,fill = color),
+                  # fill = color,
+                  shape = 21,
+                  stroke = 0.1) + 
+  scale_size(range = c(2,10)) +
+  geom_text(data = g3.1.miR,
+                  aes(x = x,
+                      y = y,
+                      label = vertex.names), 
+                  size = 2.5,
+                  segment.color = NA) +
+  # scale_colour_manual(values = cols, name = 'Expresion level \n(z-score)') +
+  # facet_grid(cellsub ~ cell, scales = 'fixed') + #, scales = 'free', space = 'free') +
+  coord_fixed(ratio = 1) +
+  # theme_facet() +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        
+        panel.background = element_rect(fill = 'white'),
+        panel.grid = element_blank(),
+        legend.position = 'none'
+  )
+
+miR.ppi
+
+```
+
+```{r}
+# setwd('C:/Users/patipark/Dropbox/STAR/miRNA')
+# ggsave(miR.ppi,
+#        filename = 'Figure9_miR_PPI.pdf',
+#        height = 12,
+#        width = 12,
+#        units = 'cm',
+#        device = cairo_pdf)
+# dev.off()
+```
